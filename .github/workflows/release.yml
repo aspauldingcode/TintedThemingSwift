@@ -1,0 +1,162 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Swift Package
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        xcode: ['15.1']
+        destination:
+          - 'platform=macOS'
+          - 'platform=iOS Simulator,name=iPhone 15'
+          - 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)'
+          - 'platform=tvOS Simulator,name=Apple TV'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+    
+    - name: Show Xcode and Swift versions
+      run: |
+        xcodebuild -version
+        swift --version
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Build Package
+      run: swift build
+    
+    - name: Run Tests
+      run: swift test --enable-code-coverage
+      if: matrix.destination == 'platform=macOS'
+    
+    - name: Test iOS
+      run: |
+        xcodebuild test \
+          -scheme TintedThemingSwift \
+          -destination '${{ matrix.destination }}' \
+          -enableCodeCoverage YES
+      if: matrix.destination != 'platform=macOS'
+  
+  build-package:
+    name: Build Release Package
+    runs-on: macos-latest
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.1.app/Contents/Developer
+    
+    - name: Build Release Package
+      run: |
+        swift build -c release
+        
+    - name: Create Package Archive
+      run: |
+        # Create a clean package directory
+        mkdir -p TintedThemingSwift-Package
+        
+        # Copy essential files
+        cp -r Sources TintedThemingSwift-Package/
+        cp Package.swift TintedThemingSwift-Package/
+        cp README.md TintedThemingSwift-Package/
+        cp LICENSE TintedThemingSwift-Package/ 2>/dev/null || echo "No LICENSE file found"
+        
+        # Create package info
+        echo "# TintedThemingSwift Package" > TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo "Version: ${GITHUB_REF#refs/tags/}" >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo "Built on: $(date)" >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo "Commit: $GITHUB_SHA" >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo "" >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo "## Installation" >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo "Add this package to your Xcode project or Package.swift:" >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo '```swift' >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo '.package(url: "https://github.com/aspauldingcode/TintedThemingSwift.git", from: "'${GITHUB_REF#refs/tags/v}'")' >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        echo '```' >> TintedThemingSwift-Package/PACKAGE_INFO.md
+        
+        # Create archive
+        tar -czf TintedThemingSwift-${GITHUB_REF#refs/tags/}.tar.gz TintedThemingSwift-Package/
+        zip -r TintedThemingSwift-${GITHUB_REF#refs/tags/}.zip TintedThemingSwift-Package/
+    
+    - name: Generate Documentation
+      run: |
+        # Generate Swift documentation if docc is available
+        if command -v swift-docc &> /dev/null; then
+          swift package generate-documentation --target TintedThemingSwift
+          tar -czf TintedThemingSwift-Documentation-${GITHUB_REF#refs/tags/}.tar.gz .build/plugins/Swift-DocC/outputs/
+        else
+          echo "Swift-DocC not available, skipping documentation generation"
+        fi
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          TintedThemingSwift-*.tar.gz
+          TintedThemingSwift-*.zip
+        body: |
+          ## TintedThemingSwift ${{ github.ref_name }}
+          
+          A Swift package for working with Base16 and Base24 color themes from the TintedTheming/Schemes project.
+          
+          ### Installation
+          
+          Add this package to your Xcode project or Package.swift:
+          
+          ```swift
+          .package(url: "https://github.com/aspauldingcode/TintedThemingSwift.git", from: "${{ github.ref_name }}")
+          ```
+          
+          ### What's Included
+          
+          - **TintedThemingSwift-${{ github.ref_name }}.tar.gz** - Complete package source (tar.gz)
+          - **TintedThemingSwift-${{ github.ref_name }}.zip** - Complete package source (zip)
+          - **TintedThemingSwift-Documentation-${{ github.ref_name }}.tar.gz** - Generated documentation (if available)
+          
+          ### Features
+          
+          - Base16 and Base24 theme support
+          - SwiftUI, UIKit, and AppKit integration
+          - Automatic theme caching
+          - Concurrent theme loading
+          - Comprehensive color extensions
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  validate-package:
+    name: Validate Swift Package
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Validate Package
+      run: |
+        swift package dump-package
+        swift package show-dependencies
+        swift package resolve

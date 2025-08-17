@@ -1,0 +1,180 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  swift-test:
+    name: Swift Tests
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        xcode: ['15.1', '15.0']
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+    
+    - name: Show Xcode and Swift versions
+      run: |
+        xcodebuild -version
+        swift --version
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ matrix.xcode }}-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-${{ matrix.xcode }}-
+          ${{ runner.os }}-spm-
+    
+    - name: Build Package
+      run: swift build
+    
+    - name: Run Tests
+      run: swift test --enable-code-coverage
+    
+    - name: Generate Code Coverage
+      run: |
+        xcrun llvm-cov export -format="lcov" \
+          .build/debug/TintedThemingSwiftPackageTests.xctest/Contents/MacOS/TintedThemingSwiftPackageTests \
+          -instr-profile .build/debug/codecov/default.profdata > coverage.lcov
+      continue-on-error: true
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.lcov
+        flags: swift
+        name: codecov-swift-${{ matrix.xcode }}
+      continue-on-error: true
+  
+  platform-compatibility:
+    name: Platform Compatibility
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        destination:
+          - 'platform=macOS'
+          - 'platform=iOS Simulator,name=iPhone 15'
+          - 'platform=iOS Simulator,name=iPhone 14'
+          - 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)'
+          - 'platform=tvOS Simulator,name=Apple TV'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.1.app/Contents/Developer
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-platform-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-platform-
+          ${{ runner.os }}-spm-
+    
+    - name: Build for Platform
+      run: |
+        if [[ "${{ matrix.destination }}" == "platform=macOS" ]]; then
+          swift build
+        else
+          xcodebuild build \
+            -scheme TintedThemingSwift \
+            -destination '${{ matrix.destination }}'
+        fi
+    
+    - name: Test for Platform
+      run: |
+        if [[ "${{ matrix.destination }}" == "platform=macOS" ]]; then
+          swift test
+        else
+          xcodebuild test \
+            -scheme TintedThemingSwift \
+            -destination '${{ matrix.destination }}'
+        fi
+  
+  package-validation:
+    name: Package Validation
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Validate Package Structure
+      run: |
+        swift package dump-package
+        swift package show-dependencies
+        swift package resolve
+    
+    - name: Check Package Manifest
+      run: |
+        # Verify Package.swift is valid
+        swift package describe --type json > package_info.json
+        cat package_info.json
+        
+        # Check for required fields
+        if ! grep -q '"name"' package_info.json; then
+          echo "Error: Package name not found"
+          exit 1
+        fi
+        
+        if ! grep -q '"TintedThemingSwift"' package_info.json; then
+          echo "Error: Expected package name 'TintedThemingSwift' not found"
+          exit 1
+        fi
+    
+    - name: Lint Swift Code
+      run: |
+        # Basic Swift syntax check
+        find Sources -name "*.swift" -exec swift -frontend -parse {} \;
+        echo "Swift syntax check passed"
+  
+  documentation:
+    name: Documentation Check
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Check Documentation
+      run: |
+        # Check if README exists and has content
+        if [[ ! -f README.md ]]; then
+          echo "Warning: README.md not found"
+        else
+          echo "README.md found ($(wc -l < README.md) lines)"
+        fi
+        
+        # Check if wiki documentation exists
+        if [[ -f wiki.adoc ]]; then
+          echo "Wiki documentation found ($(wc -l < wiki.adoc) lines)"
+        fi
+        
+        # Check for inline documentation in Swift files
+        doc_count=$(find Sources -name "*.swift" -exec grep -l "///" {} \; | wc -l)
+        echo "Swift files with documentation comments: $doc_count"
+    
+    - name: Generate Documentation (if available)
+      run: |
+        if command -v swift-docc &> /dev/null; then
+          echo "Generating documentation with Swift-DocC..."
+          swift package generate-documentation --target TintedThemingSwift
+          echo "Documentation generated successfully"
+        else
+          echo "Swift-DocC not available, skipping documentation generation"
+        fi
+      continue-on-error: true
