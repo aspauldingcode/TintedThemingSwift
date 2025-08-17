@@ -187,7 +187,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**📚 For additional documentation and examples, visit the [Wiki](../../wiki)**
+**📚 For additional documentation and examples, visit the [Wiki](../../wiki/Documentation)**
 
 **🔧 For GitHub Actions workflow documentation, see [WORKFLOWS.md](WORKFLOWS.md)**
 
