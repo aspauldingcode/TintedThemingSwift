@@ -1,15 +1,13 @@
 # TintedThemingSwift
 
+<p align="center">
+  <img src="preview1.png" alt="Preview 1" width="45%">
+  <img src="preview2.png" alt="Preview 2" width="45%">
+</p>
+
 A Swift package for working with Base16 and Base24 color themes, providing easy access to a wide variety of color schemes for your iOS, macOS, watchOS, and tvOS applications.
 
 This package is a Swift API implementation for the [TintedTheming/Schemes](https://github.com/tinted-theming/schemes) project, which provides a comprehensive collection of Base16 and Base24 color schemes.
-
-_Preview:_
-
-<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-    <img src="preview1.png" alt="Preview 1">
-    <img src="preview2.png" alt="Preview 2">
-</div>
 
 
 ## ✨ Features
