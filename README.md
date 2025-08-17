@@ -1,6 +1,8 @@
 # TintedThemingSwift
 
-A Swift package for working with Base16 and Base24 color themes, providing easy access to a wide variety of color schemes for your applications.
+A Swift package for working with Base16 and Base24 color themes, providing easy access to a wide variety of color schemes for your iOS, macOS, watchOS, and tvOS applications.
+
+This package is a Swift API implementation for the [TintedTheming/Schemes](https://github.com/tinted-theming/schemes) project, which provides a comprehensive collection of Base16 and Base24 color schemes.
 
 ## Features
 
@@ -160,9 +162,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
+- [TintedTheming/Schemes](https://github.com/tinted-theming/schemes) - The primary source of all color schemes used in this package. This Swift package serves as an API implementation for accessing these schemes.
 - [Base16](https://github.com/chriskempson/base16) - The original Base16 color scheme specification
-- [Tinted Theming](https://github.com/tinted-theming) - Community-driven theming projects
+- [Tinted Theming](https://github.com/tinted-theming) - Community-driven theming projects that maintain and develop the scheme specifications
