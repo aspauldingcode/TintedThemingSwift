@@ -18,14 +18,14 @@ A Swift package for working with Base16 and Base24 color themes, providing easy 
 Add TintedThemingSwift to your project using Xcode:
 
 1. In Xcode, go to **File → Add Package Dependencies**
-2. Enter the package URL: `https://github.com/yourusername/TintedThemingSwift`
+2. Enter the package URL: `https://github.com/aspauldingcode/TintedThemingSwift`
 3. Select the version and add to your target
 
 Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/TintedThemingSwift", from: "1.0.0")
+    .package(url: "https://github.com/aspauldingcode/TintedThemingSwift", from: "1.0.0")
 ]
 ```
 
@@ -39,7 +39,7 @@ import TintedThemingSwift
 // Create a Base16 theme
 let theme = Base16Theme(
     name: "My Theme",
-    author: "Your Name",
+    author: "Alex Spaulding",
     base00: "000000", base01: "111111", base02: "222222", base03: "333333",
     base04: "444444", base05: "555555", base06: "666666", base07: "777777",
     base08: "888888", base09: "999999", base0A: "aaaaaa", base0B: "bbbbbb",
@@ -153,6 +153,10 @@ Base24 themes extend Base16 with 8 additional colors (base10-17) for enhanced th
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Author
+
+**Alex Spaulding** - [@aspauldingcode](https://github.com/aspauldingcode)
 
 ## License
 
