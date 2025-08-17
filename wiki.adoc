@@ -1,0 +1,351 @@
+= TintedThemingSwift
+:toc: left
+:toclevels: 3
+:sectlinks:
+:sectanchors:
+:source-highlighter: rouge
+:icons: font
+
+A comprehensive Swift package for working with Base16 and Base24 color themes from the TintedTheming/Schemes project.
+
+== Quick Start
+
+[source,swift]
+----
+import TintedThemingSwift
+
+let loader = TintedThemesLoader.shared
+let themes = try await loader.loadAllBase16Themes()
+----
+
+== Core Types
+
+=== Base16Theme
+
+A struct representing a Base16 color theme with 16 colors following the Base16 specification.
+
+==== Properties
+
+[source,swift]
+----
+public let id: UUID                    // Unique identifier
+public let name: String                // Theme name
+public let author: String              // Theme author
+public let variant: String             // "light" or "dark"
+
+// Base16 color palette (hex strings without #)
+public let base00: String              // Default Background
+public let base01: String              // Lighter Background
+public let base02: String              // Selection Background
+public let base03: String              // Comments, Invisibles
+public let base04: String              // Dark Foreground
+public let base05: String              // Default Foreground
+public let base06: String              // Light Foreground
+public let base07: String              // Light Background
+public let base08: String              // Variables, Red
+public let base09: String              // Integers, Orange
+public let base0A: String              // Classes, Yellow
+public let base0B: String              // Strings, Green
+public let base0C: String              // Support, Cyan
+public let base0D: String              // Functions, Blue
+public let base0E: String              // Keywords, Purple
+public let base0F: String              // Deprecated, Brown
+----
+
+==== Methods
+
+[source,swift]
+----
+public init(name: String, author: String, variant: String = "dark",
+           base00: String, base01: String, ..., base0F: String)
+
+public var allColors: [String]                    // All 16 colors as array
+public func color(at index: Int) -> String?       // Get color by index (0-15)
+public var semanticColors: [String: String]       // Semantic color mapping
+public var isLight: Bool                          // True if light theme
+public var isDark: Bool                           // True if dark theme
+----
+
+==== Default Themes
+
+[source,swift]
+----
+static let defaultDark: Base16Theme               // Built-in dark theme
+static let defaultLight: Base16Theme              // Built-in light theme
+----
+
+=== Base24Theme
+
+A struct representing a Base24 color theme with 24 colors, extending Base16 with 8 additional colors.
+
+==== Properties
+
+[source,swift]
+----
+public let id: UUID                    // Unique identifier
+public let name: String                // Theme name
+public let author: String              // Theme author
+
+// Base16 colors (base00-base0F) - same as Base16Theme
+// Extended Base24 colors
+public let base10: String              // Extended color 1
+public let base11: String              // Extended color 2
+public let base12: String              // Extended color 3
+public let base13: String              // Extended color 4
+public let base14: String              // Extended color 5
+public let base15: String              // Extended color 6
+public let base16: String              // Extended color 7
+public let base17: String              // Extended color 8
+----
+
+==== Methods
+
+[source,swift]
+----
+public init(name: String, author: String,
+           base00: String, ..., base17: String)
+
+public var allColors: [String]                    // All 24 colors as array
+public func color(at index: Int) -> String?       // Get color by index (0-23)
+public var asBase16Theme: Base16Theme             // Convert to Base16 theme
+----
+
+== Theme Loader
+
+=== TintedThemesLoader
+
+Main class for loading themes from the tinted-theming/schemes repository with caching support.
+
+==== Singleton Access
+
+[source,swift]
+----
+public static let shared: TintedThemesLoader
+----
+
+==== Base16 Theme Loading
+
+[source,swift]
+----
+// Load all Base16 themes (uses cache when available)
+public func loadAllBase16Themes() async throws -> [Base16Theme]
+
+// Force refresh from network, ignoring cache
+public func refreshThemes() async throws -> [Base16Theme]
+
+// Get cached themes immediately (no network call)
+public func getCachedThemes() -> [Base16Theme]
+
+// Load specific theme by name
+public func loadBase16Theme(named name: String) async throws -> Base16Theme?
+
+// Load multiple themes by name (concurrent)
+public func loadBase16Themes(named names: [String]) async -> [Base16Theme]
+
+// Load only light variant themes
+public func loadLightThemes() async throws -> [Base16Theme]
+
+// Load only dark variant themes
+public func loadDarkThemes() async throws -> [Base16Theme]
+----
+
+==== Base24 Theme Loading
+
+[source,swift]
+----
+// Load all Base24 themes
+public func loadAllBase24Themes() async throws -> [Base24Theme]
+
+// Load specific Base24 theme by name
+public func loadBase24Theme(named name: String) async throws -> Base24Theme?
+
+// Load multiple Base24 themes by name (concurrent)
+public func loadBase24Themes(named names: [String]) async -> [Base24Theme]
+----
+
+== Color Extensions
+
+=== SwiftUI Integration
+
+Available on iOS 14.0+, macOS 11.0+, watchOS 7.0+, tvOS 14.0+
+
+==== Color from Hex
+
+[source,swift]
+----
+Color(hex: String)                     // Create Color from hex string
+----
+
+==== Base16Theme SwiftUI Colors
+
+[source,swift]
+----
+// Individual base colors
+var swiftUIBase00Color: Color          // Through swiftUIBase0FColor
+
+// Semantic color aliases
+var swiftUIBackgroundColor: Color      // base00
+var swiftUIForegroundColor: Color      // base05
+var swiftUISelectionColor: Color       // base02
+var swiftUICommentColor: Color         // base03
+var swiftUIErrorColor: Color           // base08
+var swiftUIWarningColor: Color         // base09
+var swiftUISuccessColor: Color         // base0B
+var swiftUILinkColor: Color            // base0D
+----
+
+==== Base24Theme SwiftUI Colors
+
+[source,swift]
+----
+// All Base16 colors plus extended colors
+var swiftUIBase10Color: Color          // Through swiftUIBase17Color
+// Same semantic aliases as Base16Theme
+----
+
+=== UIKit Integration
+
+Available on iOS 13.0+, tvOS 13.0+, watchOS 6.0+
+
+==== UIColor from Hex
+
+[source,swift]
+----
+UIColor(hex: String)                   // Create UIColor from hex string
+----
+
+==== Base16Theme UIKit Colors
+
+[source,swift]
+----
+// Individual base colors
+var uiBase00Color: UIColor             // Through uiBase0FColor
+
+// Semantic color aliases
+var uiBackgroundColor: UIColor         // base00
+var uiForegroundColor: UIColor         // base05
+var uiSelectionColor: UIColor          // base02
+var uiCommentColor: UIColor            // base03
+var uiErrorColor: UIColor              // base08
+var uiWarningColor: UIColor            // base09
+var uiSuccessColor: UIColor            // base0B
+var uiLinkColor: UIColor               // base0D
+----
+
+=== AppKit Integration
+
+Available on macOS 10.15+
+
+==== NSColor from Hex
+
+[source,swift]
+----
+NSColor(hex: String)                   // Create NSColor from hex string
+----
+
+==== Base16Theme AppKit Colors
+
+[source,swift]
+----
+// Individual base colors
+var nsBase00Color: NSColor             // Through nsBase0FColor
+
+// Semantic color aliases
+var nsBackgroundColor: NSColor         // base00
+var nsForegroundColor: NSColor         // base05
+var nsSelectionColor: NSColor          // base02
+var nsCommentColor: NSColor            // base03
+var nsErrorColor: NSColor              // base08
+var nsWarningColor: NSColor            // base09
+var nsSuccessColor: NSColor            // base0B
+var nsLinkColor: NSColor               // base0D
+----
+
+== Usage Examples
+
+=== Basic Theme Loading
+
+[source,swift]
+----
+// Load all themes
+let themes = try await TintedThemesLoader.shared.loadAllBase16Themes()
+
+// Load specific theme
+let theme = try await TintedThemesLoader.shared.loadBase16Theme(named: "monokai")
+
+// Use cached themes
+let cachedThemes = TintedThemesLoader.shared.getCachedThemes()
+----
+
+=== SwiftUI Integration Example
+
+[source,swift]
+----
+struct ContentView: View {
+    let theme = Base16Theme.defaultDark
+    
+    var body: some View {
+        VStack {
+            Text("Hello, World!")
+                .foregroundColor(theme.swiftUIForegroundColor)
+        }
+        .background(theme.swiftUIBackgroundColor)
+    }
+}
+----
+
+=== UIKit Integration Example
+
+[source,swift]
+----
+class ViewController: UIViewController {
+    let theme = Base16Theme.defaultDark
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = theme.uiBackgroundColor
+        
+        let label = UILabel()
+        label.textColor = theme.uiForegroundColor
+        label.text = "Themed Label"
+    }
+}
+----
+
+== Protocol Conformance
+
+* **Codable**: Both `Base16Theme` and `Base24Theme` can be encoded/decoded to/from JSON
+* **Identifiable**: Both themes have unique `id` properties
+* **Hashable**: Both themes can be used in Sets and as Dictionary keys
+* **Equatable**: Themes can be compared for equality based on name and author
+
+The package provides comprehensive theming support with automatic caching, concurrent loading, and seamless integration with SwiftUI, UIKit, and AppKit color systems.
+
+[NOTE]
+====
+This package is a Swift API implementation for the https://github.com/tinted-theming/schemes[TintedTheming/Schemes] project.
+====
+
+== Installation
+
+=== Swift Package Manager
+
+. Open your project in Xcode
+. Go to File → Add Package Dependencies
+. Enter the repository URL:
++
+[source]
+----
+https://github.com/aspauldingcode/TintedThemingSwift.git
+----
+
+== Troubleshooting
+
+[WARNING]
+====
+Ensure your deployment target meets the minimum requirements:
+- iOS 15.0+
+- macOS 12.0+
+- watchOS 8.0+
+- tvOS 15.0+
+====
