@@ -182,17 +182,38 @@ public class TintedThemesLoader {
     
     private func fetchThemeList(for type: String) async throws -> [String] {
         let url = URL(string: "\(apiURL)/\(type)")!
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        // Check for HTTP errors
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            // Try to decode error response
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let message = errorData["message"] as? String {
+                throw NSError(domain: "GitHubAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
+            }
+            throw NSError(domain: "GitHubAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(httpResponse.statusCode)"])
+        }
         
         struct GitHubFile: Codable {
             let name: String
             let type: String
         }
         
-        let files = try JSONDecoder().decode([GitHubFile].self, from: data)
-        return files
-            .filter { $0.type == "file" && $0.name.hasSuffix(".yaml") }
-            .map { String($0.name.dropLast(5)) } // Remove .yaml extension
+        // Try to decode as array first, if it fails, check if it's an error response
+        do {
+            let files = try JSONDecoder().decode([GitHubFile].self, from: data)
+            return files
+                .filter { $0.type == "file" && $0.name.hasSuffix(".yaml") }
+                .map { String($0.name.dropLast(5)) } // Remove .yaml extension
+        } catch {
+            // If decoding as array fails, try to decode as error response
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let message = errorData["message"] as? String {
+                throw NSError(domain: "GitHubAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "GitHub API Error: \(message)"])
+            }
+            // Re-throw original decoding error
+            throw error
+        }
     }
     
     private func loadBase16Theme(name: String) async -> Base16Theme? {
