@@ -2,7 +2,7 @@ import Foundation
 
 /// A Base16 color theme containing 16 colors following the Base16 specification
 public struct Base16Theme: Codable, Identifiable, Hashable {
-    public let id: UUID
+    public let id = UUID()
     public let name: String
     public let author: String
     public let variant: String // "light" or "dark"
@@ -34,7 +34,6 @@ public struct Base16Theme: Codable, Identifiable, Hashable {
         base08: String, base09: String, base0A: String, base0B: String,
         base0C: String, base0D: String, base0E: String, base0F: String
     ) {
-        self.id = UUID()
         self.name = name
         self.author = author
         self.variant = variant
@@ -129,12 +128,12 @@ public extension Base16Theme {
     )
     
     /// Returns true if this is a light theme
-    var isLight: Bool {
+    public var isLight: Bool {
         return variant == "light"
     }
     
     /// Returns true if this is a dark theme
-    var isDark: Bool {
+    public var isDark: Bool {
         return variant == "dark"
     }
 }

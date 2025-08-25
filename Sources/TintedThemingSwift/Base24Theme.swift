@@ -2,7 +2,7 @@ import Foundation
 
 /// A Base24 color theme containing 24 colors, extending Base16 with 8 additional colors
 public struct Base24Theme: Codable, Identifiable, Hashable {
-    public let id: UUID
+    public let id = UUID()
     public let name: String
     public let author: String
     
@@ -44,7 +44,6 @@ public struct Base24Theme: Codable, Identifiable, Hashable {
         base10: String, base11: String, base12: String, base13: String,
         base14: String, base15: String, base16: String, base17: String
     ) {
-        self.id = UUID()
         self.name = name
         self.author = author
         self.base00 = base00
