@@ -106,35 +106,52 @@ public struct Base16Theme: Codable, Identifiable, Hashable {
 
 // MARK: - Default Themes
 public extension Base16Theme {
-    /// A default dark theme
+    /// Default dark theme — Apple platform dark chrome (fallback hex ≈ system colors).
+    /// On Apple platforms, SwiftUI/AppKit/UIKit color accessors resolve to live system
+    /// colors (window/control backgrounds, label, controlAccentColor, systemRed…).
     static let defaultDark = Base16Theme(
         name: "Default Dark",
-        author: "TintedThemes",
+        author: "Apple Platform",
         variant: "dark",
-        base00: "181818", base01: "282828", base02: "383838", base03: "585858",
-        base04: "b8b8b8", base05: "d8d8d8", base06: "e8e8e8", base07: "f8f8f8",
-        base08: "ab4642", base09: "dc9656", base0A: "f7ca88", base0B: "a1b56c",
-        base0C: "86c1b9", base0D: "7cafc2", base0E: "ba8baf", base0F: "a16946"
+        // Approximate macOS/iOS dark system palette (used off-platform / for YAML export).
+        base00: "1C1C1E", base01: "2C2C2E", base02: "3A3A3C", base03: "8E8E93",
+        base04: "AEAEB2", base05: "F2F2F7", base06: "EBEBF5", base07: "FFFFFF",
+        base08: "FF453A", base09: "FF9F0A", base0A: "FFD60A", base0B: "30D158",
+        base0C: "64D2FF", base0D: "0A84FF", base0E: "BF5AF2", base0F: "AC8E68"
     )
-    
-    /// A default light theme
+
+    /// Default light theme — Apple platform light chrome (fallback hex ≈ system colors).
+    /// On Apple platforms, color accessors resolve to live system colors.
     static let defaultLight = Base16Theme(
         name: "Default Light",
-        author: "TintedThemes",
+        author: "Apple Platform",
         variant: "light",
-        base00: "f8f8f8", base01: "e8e8e8", base02: "d8d8d8", base03: "b8b8b8",
-        base04: "585858", base05: "383838", base06: "282828", base07: "181818",
-        base08: "ab4642", base09: "dc9656", base0A: "f7ca88", base0B: "a1b56c",
-        base0C: "86c1b9", base0D: "7cafc2", base0E: "ba8baf", base0F: "a16946"
+        // Approximate macOS/iOS light system palette (used off-platform / for YAML export).
+        base00: "F5F5F7", base01: "FFFFFF", base02: "E5E5EA", base03: "8E8E93",
+        base04: "636366", base05: "1C1C1E", base06: "3A3A3C", base07: "000000",
+        base08: "FF3B30", base09: "FF9500", base0A: "FFCC00", base0B: "34C759",
+        base0C: "5AC8FA", base0D: "007AFF", base0E: "AF52DE", base0F: "A2845E"
     )
-    
+
     /// Returns true if this is a light theme
     var isLight: Bool {
         return variant == "light"
     }
-    
+
     /// Returns true if this is a dark theme
     var isDark: Bool {
         return variant == "dark"
+    }
+
+    /// Default Light / Default Dark map chrome + accents to stock Apple system colors
+    /// (buttons, window/control backgrounds, labels, control accent).
+    var usesApplePlatformChrome: Bool {
+        (name == "Default Dark" || name == "Default Light")
+            && (author == "Apple Platform" || author == "TintedThemes")
+    }
+
+    /// Whether this theme is one of the built-in Default Light / Default Dark presets.
+    var isDefaultPlatformTheme: Bool {
+        name == "Default Dark" || name == "Default Light"
     }
 }

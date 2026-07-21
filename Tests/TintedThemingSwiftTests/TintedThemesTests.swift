@@ -103,7 +103,16 @@ final class TintedThemesTests: XCTestCase {
         
         XCTAssertEqual(darkTheme.name, "Default Dark")
         XCTAssertEqual(lightTheme.name, "Default Light")
+        XCTAssertEqual(darkTheme.author, "Apple Platform")
+        XCTAssertEqual(lightTheme.author, "Apple Platform")
+        XCTAssertTrue(darkTheme.usesApplePlatformChrome)
+        XCTAssertTrue(lightTheme.usesApplePlatformChrome)
         XCTAssertNotEqual(darkTheme.base00, lightTheme.base00)
+        // Apple system dark window ≈ #1C1C1E, light ≈ #F5F5F7
+        XCTAssertEqual(darkTheme.base00.uppercased(), "1C1C1E")
+        XCTAssertEqual(lightTheme.base00.uppercased(), "F5F5F7")
+        XCTAssertEqual(darkTheme.base0D.uppercased(), "0A84FF")
+        XCTAssertEqual(lightTheme.base0D.uppercased(), "007AFF")
     }
     
     func testThemeEquality() {
